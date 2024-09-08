@@ -1,0 +1,173 @@
+#include <iostream>
+#include <Windows.h>
+#include <time.h>
+#include <string>
+
+using namespace std;
+
+const int field_hight = 15;
+const int field_width = 10;
+const int x_divide = 20, y_divide = 4;
+const Vector field_start(10, 20);
+const Vector next_piece_pos(40, 30);
+char field(field_high*field_width);
+bool close = false;
+bool down = false;
+string lose = "You lose";
+int score = 0;
+
+class Vector
+{
+
+public:
+	int X, Y;
+	Vector(int x = 0, int y = 0) :X(x), Y(y)
+	{
+
+	}
+	const Vector operator +(const Vector &right)
+	{
+		return Vector(X + right.X, Y + right.Y);
+	}
+};
+
+char &GetField(const Vector &pos)
+{
+	return  field(pos.Y*field_width + pos.X);
+}
+char &GetField(int x, int y) {
+	return field[y*field_width + x];
+}
+void SetConsoleCursor(const Vector &pos) 
+{
+	COORD c = { (short)pos.X,(short)pos.Y };
+	HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
+	SetConsoleCursorPosition(h, c);
+}
+class Piece
+{
+private:
+	Vector Position;
+	Vector Block[4];
+
+public:
+	Piece()
+	{}
+	Piece(const Vector &b1, const Vector &b2, const Vector &b3, const Vector &b4)
+	{
+		Block[0] = b1;
+		Block[1] = b2;
+		Block[2] = b3;
+		Block[3] = b4;
+	}
+	void SetPosition(const Vector &pos)
+	{
+		Position = pos;
+	}
+	Vector GetPosition() const
+	{
+		return Position;
+	}
+	void Freeze()
+	{
+		for (int i = 0;i < 4; i++)
+		{
+			GetFeild(Position + Block[i]) = '#';
+		}
+	}
+	bool Step()
+	{
+		Position.Y++;
+		if (Collide())
+		{
+			Position.Y--;
+			Freeze();
+			return true;
+		}
+		return false;
+	}
+	void Rotate()
+	{
+		for (int i = 0; i < 4; i++)
+		{
+			Vector pos = Block[i];
+			Block[i] = Vector(pos.Y, -pos.X);
+		}
+		if (Collide())
+		{
+			UnRotate();
+		}
+	}
+	void UnRotate()
+	{
+		for (int i = 0; i < 4; i++)
+		{
+			Vector pos = Block[i];
+			Block[i] = Vector(-pos.Y, pos.X);
+		}
+    }
+	void Draw_(Vector&fieldStart, bool clamp = true, char symbol = '*')
+	{
+		for (int i = 0; i < 4; i++)
+		{
+			Vector pos = Position + Block[i];
+			if (pos.Y >= 0 || !clamp)
+			{
+				SetConsoleCursor(fieldStart + pos);
+				cout << symbol;
+			}
+		}
+	}
+	void UnDraw_(Vector&fieldStart, bool clamp = true)
+	{
+		Draw_(fieldStart, clamp '');
+	}
+	bool Collide()
+	{
+		for (int i = 0; i < 4; i++)
+		{
+			Vector pos = Position + Block[i];
+			if (pos.X < 0 || pos.X >= field_width || pos.Y >= 0 && GetField(pos.X, pos.Y))
+				return true;
+		}
+		return false;
+	}
+};
+const int piece_count = 5;
+Piece pieces[piece_count];
+Piece currentPiece, nextPiece;
+
+void SetupPieces()
+{
+	pieces[0] = Piece(Vector(0, 2), Vector(0,1), Vector(0, 0), Vector(0, -1));
+	pieces[1] = Piece(Vector(0, 0), Vector(0,1), Vector(1, 0), Vector(1, 1));
+	pieces[2] = Piece(Vector(-1, 0), Vector(0,0), Vector(1, 0), Vector(0, -1));
+	pieces[3] = Piece(Vector(-1, 1), Vector(-1,1), Vector(0, 0), Vector(0, -1));
+	pieces[4] = Piece(Vector(1, 1), Vector(1,0), Vector(0, 0), Vector(0, -1);
+}
+int RandomFigure(int low, int high)
+{
+	int range = high - low;
+	return low + rand() % range;
+}
+void LoadHighScore()
+{
+
+}
+void SaveHighScore()
+{
+
+}
+void Fail()
+{
+	int failen = (int)strlen(lose);
+	Vector pos = field_start + Vector((field_width - failen) / 2, field_hight);
+	SetConsoleCursor(pos);
+	cout << lose;
+	while (GetKeyState(VK_SPACE) > -100 && GetKeyState(VK_RETURN) > -100)
+	{
+
+	}
+	Reset();
+}
+void SpawnPiece()
